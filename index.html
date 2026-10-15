@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="dark light">
+  <title>Методичка МЗ</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%A5%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+  <script src="config.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <noscript><p class="noscript">Для работы методички включите JavaScript.</p></noscript>
+
+  <div id="boot" class="boot" role="status" aria-live="polite">
+    <span class="boot__mark" aria-hidden="true">🏥</span>
+    <span id="bootText">Загружаем методичку…</span>
+  </div>
+
+  <!-- ===== Вход, регистрация, сброс пароля ===== -->
+  <div id="auth" class="auth" hidden>
+    <div class="auth__card">
+      <div class="brand">
+        <span class="brand__mark" aria-hidden="true">🏥</span>
+        <span class="brand__name">Министерство<br>Здравоохранения</span>
+      </div>
+      <h1 class="auth__title">Методичка МЗ</h1>
+      <p class="auth__sub">Справочный портал для сотрудников. Войдите под игровым ником.</p>
+
+      <div class="seg" role="tablist" aria-label="Вход или регистрация">
+        <button type="button" role="tab" id="tabLogin" aria-selected="true" aria-controls="loginForm">Вход</button>
+        <button type="button" role="tab" id="tabReg" aria-selected="false" aria-controls="regForm">Регистрация</button>
+      </div>
+
+      <form id="loginForm" class="form" role="tabpanel" aria-labelledby="tabLogin" novalidate>
+        <label class="field">
+          <span>Игровой ник</span>
+          <input name="nick" autocomplete="username" placeholder="Vasilii_Sokolov" maxlength="49" spellcheck="false" autocapitalize="off" required>
+        </label>
+        <label class="field">
+          <span>Пароль</span>
+          <input name="password" type="password" autocomplete="current-password" maxlength="128" required>
+        </label>
+        <label class="check">
+          <input name="remember" type="checkbox">
+          <span>Запомнить меня на этом устройстве</span>
+        </label>
+        <p class="form__msg" role="alert"></p>
+        <button class="btn btn--primary btn--wide" type="submit">Войти</button>
+        <button id="forgotBtn" class="linkbtn linkbtn--center" type="button">Забыли пароль?</button>
+      </form>
+
+      <form id="regForm" class="form" role="tabpanel" aria-labelledby="tabReg" novalidate hidden>
+        <label class="field">
+          <span>Игровой ник</span>
+          <input name="nick" autocomplete="username" placeholder="Имя_Фамилия" maxlength="49" spellcheck="false" autocapitalize="off" required>
+        </label>
+        <label class="field">
+          <span>Код доступа <small>выдаёт руководство подразделения</small></span>
+          <input name="code" autocomplete="off" placeholder="MZ-XXXX-XXXX" maxlength="64" spellcheck="false" autocapitalize="characters" required>
+        </label>
+        <label class="field">
+          <span>Пароль <small>не короче 10 символов</small></span>
+          <input name="password" type="password" autocomplete="new-password" maxlength="128" required>
+        </label>
+        <label class="field">
+          <span>Повторите пароль</span>
+          <input name="password2" type="password" autocomplete="new-password" maxlength="128" required>
+        </label>
+        <p class="form__msg" role="alert"></p>
+        <button class="btn btn--primary btn--wide" type="submit">Отправить заявку</button>
+        <p class="form__hint">Пароль шифруется на вашем устройстве и не передаётся в открытом виде.</p>
+      </form>
+
+      <form id="resetForm" class="form" novalidate hidden>
+        <p class="form__hint">Попросите код сброса у лидера своего подразделения и придумайте новый пароль.</p>
+        <label class="field">
+          <span>Игровой ник</span>
+          <input name="nick" autocomplete="username" placeholder="Имя_Фамилия" maxlength="49" spellcheck="false" autocapitalize="off" required>
+        </label>
+        <label class="field">
+          <span>Код сброса</span>
+          <input name="code" autocomplete="one-time-code" placeholder="XXXX-XXXX" maxlength="64" spellcheck="false" autocapitalize="characters" required>
+        </label>
+        <label class="field">
+          <span>Новый пароль <small>не короче 10 символов</small></span>
+          <input name="password" type="password" autocomplete="new-password" maxlength="128" required>
+        </label>
+        <label class="field">
+          <span>Повторите пароль</span>
+          <input name="password2" type="password" autocomplete="new-password" maxlength="128" required>
+        </label>
+        <p class="form__msg" role="alert"></p>
+        <button class="btn btn--primary btn--wide" type="submit">Сменить пароль</button>
+        <button id="backToLogin" class="linkbtn linkbtn--center" type="button">Вернуться ко входу</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Приложение ===== -->
+  <div id="app" class="app" hidden>
+    <aside id="sidebar" class="sidebar" aria-label="Разделы">
+      <a class="brand brand--side" href="#home">
+        <span class="brand__mark" aria-hidden="true">🏥</span>
+        <span class="brand__name">Министерство<br>Здравоохранения</span>
+      </a>
+      <nav id="nav" class="nav"></nav>
+    </aside>
+    <div id="scrim" class="scrim" hidden></div>
+
+    <div class="main">
+      <header class="topbar">
+        <button id="menuBtn" class="iconbtn iconbtn--menu" type="button" aria-label="Открыть меню" aria-controls="sidebar" aria-expanded="false"></button>
+        <div class="topbar__title"><span aria-hidden="true">🏥</span><span id="siteTitle">Методичка МЗ</span></div>
+        <button id="searchBtn" class="searchbtn" type="button" aria-haspopup="dialog">
+          <span class="searchbtn__text">Поиск по методичке</span><kbd>Ctrl K</kbd>
+        </button>
+        <div class="topbar__tools">
+          <button id="newsBtn" class="iconbtn" type="button" aria-label="Объявления" aria-haspopup="dialog" aria-expanded="false"></button>
+          <button id="favBtn" class="iconbtn iconbtn--box" type="button" aria-label="Избранное" aria-haspopup="dialog" aria-expanded="false"></button>
+          <button id="histBtn" class="iconbtn iconbtn--box" type="button" aria-label="Недавно открытые" aria-haspopup="dialog" aria-expanded="false"></button>
+          <button id="themeBtn" class="iconbtn iconbtn--theme" type="button" aria-label="Сменить тему"></button>
+          <a id="userChip" class="userchip" href="#profile" aria-label="Профиль">
+            <span id="avatar" class="avatar" aria-hidden="true"></span>
+            <span class="userchip__text">
+              <span class="userchip__nick"><span class="shield" aria-hidden="true"></span><span id="userNick"></span></span>
+              <span id="userBadge" class="badge"></span>
+            </span>
+          </a>
+          <button id="logoutBtn" class="btn btn--primary btn--logout" type="button"><span class="ico-logout" aria-hidden="true"></span><span class="btn--logout__text">Выйти</span></button>
+        </div>
+      </header>
+
+      <main id="view" class="view" tabindex="-1"></main>
+    </div>
+  </div>
+
+  <!-- ===== Поиск ===== -->
+  <div id="search" class="search" role="dialog" aria-modal="true" aria-label="Поиск по методичке" hidden>
+    <div class="search__box">
+      <div class="search__field">
+        <span class="search__ico" aria-hidden="true"></span>
+        <input id="searchInput" type="search" placeholder="Например: вызов, анестезия, ГЗГВ" autocomplete="off" spellcheck="false" aria-controls="searchResults">
+        <kbd>Esc</kbd>
+      </div>
+      <ul id="searchResults" class="search__results" role="listbox" aria-label="Результаты"></ul>
+    </div>
+  </div>
+
+  <div id="popover" class="popover" role="dialog" aria-modal="false" hidden></div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+</body>
+</html>
