@@ -328,7 +328,7 @@
     if (can('senior')) {
       nav.append(h('p', { class: 'nav__group', text: 'Руководство' }));
       nav.append(navLink('staff', '🛡️', 'Управление',
-        S.pending ? h('span', { class: 'nav__count', title: 'Новые заявки', text: String(S.pending) }) : null));
+        S.pending && can('leader') ? h('span', { class: 'nav__count', title: 'Новые заявки', text: String(S.pending) }) : null));
     }
     markActiveNav();
   }
@@ -898,12 +898,12 @@
   // ===================== Управление =====================
   function pageStaff() {
     const tabsDef = [
-      ['requests', 'Заявки'],
+      can('leader') ? ['requests', 'Заявки'] : null,
       ['people', 'Сотрудники'],
       ['news', 'Объявления'],
       can('leader') ? ['codes', 'Коды доступа'] : null
     ].filter(Boolean);
-    if (!tabsDef.some(t => t[0] === S.staffTab)) S.staffTab = 'requests';
+    if (!tabsDef.some(t => t[0] === S.staffTab)) S.staffTab = tabsDef[0][0];
 
     const bar = h('div', { class: 'ctabs ctabs--staff', role: 'tablist' });
     const pane = h('div', { class: 'staff' });
