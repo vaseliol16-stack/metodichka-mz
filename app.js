@@ -182,7 +182,7 @@
       S.token = d.token;
       store.set('mz:token', d.token, el.remember.checked);
       formBusy(f, false);
-      await start();
+      await start(d.boot);
     } catch (err) {
       formBusy(f, false);
       formMsg(f, err.message);
@@ -268,13 +268,16 @@
   }
 
   // ===================== Запуск =====================
-  async function start() {
+  /** pre — данные, которые сервер уже прислал вместе со входом; тогда второй запрос не нужен. */
+  async function start(pre) {
     $('#auth').hidden = true;
     $('#boot').hidden = false;
     $('#bootText').textContent = 'Загружаем методичку…';
-    let d;
-    try { d = await api('bootstrap'); }
-    catch (err) { if (err.code !== 'AUTH') signOutLocal(err.message); return; }
+    let d = pre && pre.user ? pre : null;
+    if (!d) {
+      try { d = await api('bootstrap'); }
+      catch (err) { if (err.code !== 'AUTH') signOutLocal(err.message); return; }
+    }
     S.user = d.user;
     S.news = Array.isArray(d.news) ? d.news : [];
     S.depts = Array.isArray(d.depts) ? d.depts : [];
