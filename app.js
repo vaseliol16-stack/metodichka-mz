@@ -1,18 +1,16 @@
 'use strict';
 
 (() => {
-  // Сайт нельзя встроить в чужую страницу (защита от подмены кликов).
   if (window.top !== window.self) { document.documentElement.hidden = true; return; }
 
   const CONF = window.MZ_CONFIG || {};
-  const CLIENT_ITERATIONS = 600000;               // PBKDF2 в браузере (рекомендация OWASP)
+  const CLIENT_ITERATIONS = 600000;               
   const SALT_PREFIX = 'mz-metodichka:v2:';
   const NICK_RE = /^[A-Z][a-z]{1,23}_[A-Z][a-z]{1,23}$/;
   const ID_RE = /^[a-z0-9-]{1,40}$/;
   const RANK = { user: 1, senior: 2, leader: 3, admin: 4 };
   const ROLE_TITLE = { user: 'Пользователь', senior: 'Старший состав', leader: 'Лидер', admin: 'admin' };
 
-  // ===================== Иконки (только константы) =====================
   const ICON = {
     bell: '<svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>',
     bookmark: '<svg viewBox="0 0 24 24"><path d="M7 4h10v16l-5-3.5L7 20z"/></svg>',
@@ -35,11 +33,9 @@
   };
   const icon = (name, cls) => { const s = document.createElement('span'); s.className = 'ico' + (cls ? ' ' + cls : ''); s.setAttribute('aria-hidden', 'true'); s.innerHTML = ICON[name]; return s; };
 
-  // ===================== Мелкие помощники =====================
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-  /** Создаёт элемент. Текст всегда вставляется как текст, не как HTML. */
   function h(tag, props, ...kids) {
     const n = document.createElement(tag);
     if (props) for (const [k, v] of Object.entries(props)) {
@@ -80,7 +76,6 @@
     set(k, v) { try { localStorage.setItem('mz:' + k, JSON.stringify(v)); } catch (_) { /* ничего */ } }
   };
 
-  // ===================== Состояние =====================
   const S = {
     token: null, user: null,
     sections: [], byId: new Map(), site: { cities: [], tags: [] }, depts: [],
@@ -92,7 +87,6 @@
   const me = () => S.user || { role: 'user' };
   const can = role => rank(me().role) >= rank(role);
 
-  // ===================== Связь с сервером =====================
   const apiConfigured = () => typeof CONF.API_URL === 'string' && /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(CONF.API_URL);
 
   async function api(action, payload = {}, auth = true) {
@@ -103,7 +97,7 @@
     try {
       res = await fetch(CONF.API_URL, {
         method: 'POST',
-        body: JSON.stringify(body),          // text/plain — без лишнего CORS-запроса
+        body: JSON.stringify(body),          
         credentials: 'omit',
         cache: 'no-store',
         redirect: 'follow',
@@ -122,7 +116,6 @@
     return data.data;
   }
 
-  /** PBKDF2-SHA256 в браузере: пароль никогда не уходит в сеть в открытом виде. */
   async function clientHash(nick, password) {
     if (!window.crypto || !crypto.subtle) throw new Error('Браузер не поддерживает шифрование. Откройте сайт по https.');
     const enc = new TextEncoder();
@@ -143,7 +136,6 @@
     return '';
   }
 
-  // ===================== Вход, регистрация, сброс =====================
   function formMsg(form, text, ok) {
     const m = $('.form__msg', form);
     m.textContent = text || '';
@@ -267,8 +259,6 @@
     }
   }
 
-  // ===================== Запуск =====================
-  /** pre — данные, которые сервер уже прислал вместе со входом; тогда второй запрос не нужен. */
   async function start(pre) {
     $('#auth').hidden = true;
     $('#boot').hidden = false;
@@ -345,7 +335,6 @@
     });
   }
 
-  // ===================== Маршруты =====================
   function route() {
     let r = '';
     try { r = decodeURIComponent(location.hash.slice(1)); } catch (_) { r = ''; }
@@ -380,7 +369,6 @@
       ...body);
   }
 
-  // ===================== Главная =====================
   function pageHome() {
     const total = S.sections.length;
     const done = S.sections.filter(s => S.studied.has(s.id)).length;
@@ -389,7 +377,7 @@
     const hero = h('div', { class: 'hero' },
       h('p', { class: 'hero__title', text: 'Министерство Здравоохранения' }),
       h('p', { class: 'hero__sub', text: 'Методическое пособие' }),
-      h('p', { class: 'hero__cap', text: 'Справочно-информационный портал для сотрудников' + (CONF.SERVER_NAME ? ' ' + CONF.SERVER_NAME : '') }));
+      h('p', { class: 'hero__cap', text: 'Справочно-информационный портал для сотрудников'}));
 
     const warn = h('section', { class: 'alert', 'aria-labelledby': 'alertTitle' },
       icon('warn', 'alert__ico'),
@@ -401,7 +389,6 @@
           h('li', { text: 'При возникновении спорных вопросов обращайтесь к актуальным регламентам' }),
           h('li', { text: 'Администрация не несёт ответственности за возможные ошибки в содержании' }))));
 
-    // Продолжить чтение и избранное
     const last = prefs.get(histKey(), []).map(id => S.byId.get(id)).filter(Boolean)[0];
     const favs = Array.from(S.fav).map(id => S.byId.get(id)).filter(Boolean);
     const quick = (last || favs.length) ? h('div', { class: 'quick' },
@@ -450,7 +437,6 @@
     return pageFrame('Главная', null, hero, warn, quick, progress);
   }
 
-  // ===================== Раздел =====================
   function pageSection(sec) {
     const studied = S.studied.has(sec.id), fav = S.fav.has(sec.id);
     const bStudied = h('button', { class: 'chip chip--ok' + (studied ? ' is-on' : ''), type: 'button', 'aria-pressed': String(studied) },
@@ -489,7 +475,6 @@
   const stub = () => h('p', { class: 'stub' }, 'Материал готовится и скоро появится.',
     can('admin') ? h('small', { text: 'Заполните этот блок в Content.gs.' }) : null);
 
-  // ===================== Подстановки в биндах =====================
   const gender = who => prefs.get('gender:' + who, 'm') === 'f' ? 'f' : 'm';
   const cityOf = () => { const c = prefs.get('city', ''); return S.site.cities.includes(c) ? c : (S.site.cities[0] || ''); };
   const tagOf = () => { const t = prefs.get('tag', ''); return S.site.tags.some(x => x.tag === t) ? t : ((S.site.tags[0] || {}).tag || ''); };
@@ -515,7 +500,6 @@
   }
   const refreshLive = () => S.live.forEach(x => { x.el.textContent = fill(x.tpl); });
 
-  // ===================== Отрисовка блоков содержимого =====================
   function renderBlocks(blocks, prefix) {
     const frag = document.createDocumentFragment();
     (blocks || []).forEach((b, i) => {
@@ -698,7 +682,6 @@
     btn._t = setTimeout(() => { label.textContent = 'Копировать'; if (row) row.classList.remove('is-copied'); }, 1600);
   }
 
-  // ===================== Поиск =====================
   function buildIndex() {
     const out = [];
     const add = (sec, key, crumbs, text, title, label) => { if (text) out.push({ sec, key, crumbs, text: String(text), title: !!title, label: label || '' }); };
@@ -792,7 +775,6 @@
     selectHit(0);
   }
 
-  /** Подсвечивает найденные слова, собирая текст из узлов (без HTML). */
   function highlight(text, words) {
     const s = String(text);
     const frag = document.createDocumentFragment();
@@ -831,7 +813,6 @@
     else location.hash = '#' + hit.sec.id;
   }
 
-  /** Открывает вкладки и пункты, в которых лежит найденное, и подсвечивает его. */
   function reveal(key) {
     if (!key) { window.scrollTo(0, 0); return; }
     const el = $('#view').querySelector('[data-key="' + CSS.escape(key) + '"]');
@@ -845,7 +826,6 @@
     setTimeout(() => el.classList.remove('is-found'), 2200);
   }
 
-  // ===================== Профиль =====================
   function pageProfile() {
     const u = S.user;
     const form = h('form', { class: 'form form--narrow', novalidate: true },
@@ -1158,7 +1138,6 @@
     prefs.set(histKey(), list.slice(0, 10));
   }
 
-  // ===================== Всплывающие панели =====================
   let popAnchor = null;
   function openPopover(anchor, title, body) {
     const pop = $('#popover');
@@ -1193,7 +1172,6 @@
     $('#newsBtn').classList.toggle('has-dot', !!newest && newest !== prefs.get(seenKey(), ''));
   }
 
-  // ===================== Тема, меню, уведомления =====================
   function applyTheme(t) {
     document.documentElement.setAttribute('data-theme', t);
     const btn = $('#themeBtn');
@@ -1210,7 +1188,6 @@
     setTimeout(() => t.remove(), 4000);
   }
 
-  // ===================== Привязка событий =====================
   function init() {
     applyTheme(prefs.get('theme', 'dark') === 'light' ? 'light' : 'dark');
 
@@ -1259,7 +1236,6 @@
       openPopover(e.currentTarget, 'Недавно открытые', sectionLinks(prefs.get(histKey(), []), 'Вы ещё не открывали разделы'));
     });
 
-    // Поиск
     $('#searchBtn').addEventListener('click', openSearch);
     $('#search').addEventListener('click', e => { if (e.target.id === 'search') closeSearch(); });
     $('#searchInput').addEventListener('input', e => runSearch(e.target.value));
